@@ -1,0 +1,9 @@
+{
+  "id": "first-sentence-title",
+  "name": "First Sentence Title",
+  "version": "1.0.0",
+  "minAppVersion": "1.4.0",
+  "description": "保存笔记时，自动把正文第一句（以句号。结尾）设为文件名（标题）。",
+  "author": "WorkBuddy · 小台",
+  "isDesktopOnly": false
+}
