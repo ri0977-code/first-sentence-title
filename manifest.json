@@ -3,7 +3,7 @@
   "name": "First Sentence Title",
   "version": "1.1.0",
   "minAppVersion": "1.4.0",
-  "description": "保存笔记时自动以正文第一句命名文件，中文句号「。」与英文句点「.」均可触发。Automatically names your note from its first sentence on save.",
+  "description": "保存笔记时自动以正文第一句或标题行命名文件；支持中文「。」与英文「.」等句末标点，跳过 Mr./版本号缩写，双链自动同步。 Auto-titles notes from the first sentence or title line; supports Chinese「。」/English「.」, skips Mr./v1.0.0, wikilinks sync.",
   "author": "WorkBuddy · 小台",
   "isDesktopOnly": false
 }
