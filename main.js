@@ -72,9 +72,13 @@ class FirstSentenceTitlePlugin extends obsidian.Plugin {
   }
 
   // 标题候选两条规则：
-  //  ① 标题行规则：第一个非空行（去掉 # 标记）较短、不含句号、且后面还有正文
+  //  ① 标题行规则：第一个非空行（去掉 # 标记）较短、不含句末标点、且后面还有正文
   //     —— 对应「粘贴的报告带标题行 + 回车换行」的场景；
-  //  ② 第一句规则：正文中第一个「。」之前的内容
+  //  ② 第一句规则：正文中第一个句末标点之前的内容。
+  //     句末标点同时支持中文与英文：
+  //       · 中文：。（U+3002）、！、？
+  //       · 英文 / 全角：. （含全角 ． U+FF0E）、!、?
+  //     英文句点 "." 做了缩写与数字防误判（Mr. / v1.0.0 / e.g. 不会误截断）。
   //  优先级：明显的标题行 > 第一句
   extractTitle(content) {
     const rawLines = this.stripFrontmatter(content).split('\n');
@@ -99,16 +103,16 @@ class FirstSentenceTitlePlugin extends obsidian.Plugin {
     }
 
     const body = contentParts.join('\n');
-    const sIdx = body.indexOf('。');
-    const sentence = sIdx > 0
-      ? body.slice(0, sIdx).replace(/\s*\n\s*/g, ' ').replace(/\s{2,}/g, ' ').trim()
+    const end = this.findFirstSentenceEnd(body);
+    const sentence = end > 0
+      ? body.slice(0, end).replace(/\s*\n\s*/g, ' ').replace(/\s{2,}/g, ' ').trim()
       : null;
 
     let titleLine = null;
     if (
       this.settings.titleLineMax > 0 &&
       firstLine &&
-      !firstLine.includes('。') &&
+      !/[。.?!！？]/.test(firstLine) &&   // 含句末标点的行视为「句子」而非标题行
       firstLine.length <= this.settings.titleLineMax &&
       hasFollowing
     ) {
@@ -123,6 +127,32 @@ class FirstSentenceTitlePlugin extends obsidian.Plugin {
       .replace(/[\\/:*?"<>|#^[\]]/g, '') // Windows 文件名非法字符
       .trim();
     return cleaned || null;
+  }
+
+  // 在 body 中找出「第一句」句末标点的下标（返回 -1 表示未找到）。
+  // 句末标点不含该字符本身；英文句点 "." 额外做防误判处理。
+  findFirstSentenceEnd(body) {
+    // 无歧义终止符：中文句号、中文 / 英文 ！？、全角句点
+    const stops = ['。', '．', '！', '？', '!', '?'];
+    let best = -1;
+    for (const s of stops) {
+      const i = body.indexOf(s);
+      if (i >= 0 && (best === -1 || i < best)) best = i;
+    }
+    // 英文句点 "."：需后接空白 / 结尾 / 其他终止符，并排除缩写与数字
+    const dotRe = /\.(?=\s|$|[。．！？!?])/g;
+    let m;
+    while ((m = dotRe.exec(body)) !== null) {
+      const i = m.index;
+      const prev = body[i - 1];
+      if (/[0-9]/.test(prev)) continue;                                   // 1.0.0 / 3.5 等数字、版本号
+      const wordMatch = body.slice(0, i).match(/[A-Za-z]+$/);             // 句号前紧邻的英文词
+      const tokenLen = wordMatch ? wordMatch[0].length : 0;
+      if (tokenLen <= 2) continue;                                        // Mr. Dr. St. vs. 等缩写（短词）
+      if (best === -1 || i < best) best = i;
+      break;
+    }
+    return best;
   }
 
   stripFrontmatter(text) {
