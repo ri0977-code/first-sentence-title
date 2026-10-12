@@ -1,9 +1,9 @@
 {
   "id": "first-sentence-title",
   "name": "First Sentence Title",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "minAppVersion": "1.4.0",
-  "description": "保存笔记时，自动把正文第一句（以句号。结尾）设为文件名（标题）。",
+  "description": "保存笔记时自动以正文第一句命名文件，中文句号「。」与英文句点「.」均可触发。Automatically names your note from its first sentence on save.",
   "author": "WorkBuddy · 小台",
   "isDesktopOnly": false
 }
